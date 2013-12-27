@@ -1,6 +1,7 @@
 package remoteresourcedeploy.popup.actions;
 
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.widgets.Shell;
@@ -39,12 +40,20 @@ public class StartAction implements IObjectActionDelegate {
 //			shell,
 //			"Remotedeploy",
 //			"New Action was executed.");
-		new ConfigDialog(shell).open();
-		String retCode = SshCopyUtil.executeCommand(shell);
-		if(SelectFileUtil.getSelectFile().isDirectory()){
-			FileChangeWatcherThread.start(SelectFileUtil.getSelectFile().getPath());
+		ConfigDialog cd = new ConfigDialog(shell);;
+		try {
+			cd.open();
+
+			if(cd.getReturnCode() == IDialogConstants.OK_ID){
+				String retCode = SshCopyUtil.executeCommand(shell);
+				if(SelectFileUtil.getSelectFile().isDirectory()){
+					FileChangeWatcherThread.start(SelectFileUtil.getSelectFile().getPath());
+				}
+				MessageDialog.openInformation(shell,"Remotedeploy",retCode);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		MessageDialog.openInformation(shell,"Remotedeploy",retCode);
 	}
 
 	/**

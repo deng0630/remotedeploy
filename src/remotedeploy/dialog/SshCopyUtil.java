@@ -1,7 +1,16 @@
 package remotedeploy.dialog;
 
+import java.awt.Window;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Vector;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Shell;
@@ -9,11 +18,16 @@ import org.eclipse.swt.widgets.Shell;
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.SCPClient;
 import ch.ethz.ssh2.SFTPv3Client;
+import ch.ethz.ssh2.SFTPv3DirectoryEntry;
+import ch.ethz.ssh2.SFTPv3FileAttributes;
+import ch.ethz.ssh2.SFTPv3FileHandle;
 
 public class SshCopyUtil {
 	
 	private static SCPClient client;
 	private static SFTPv3Client sftpClient;
+	
+	static processDialog tipDialog;
 	
 	public static String executeCommand(Shell shell) {
 		if (ConfigDialog.host == null || ConfigDialog.user == null || ConfigDialog.passwd == null
@@ -31,38 +45,45 @@ public class SshCopyUtil {
 			}
 			client = new SCPClient(conn);
 			sftpClient = new SFTPv3Client(conn);  
-			try{
-				sftpClient.rmdir(ConfigDialog.desc);	
-			}catch(Exception e){
-//				e.printStackTrace();
+			//tipDialog.open();
+			if(ConfigDialog.initWithCopy.equals("1")){
+				try{
+					//sftpClient.rmdir(ConfigDialog.desc);
+					delRemote(ConfigDialog.desc);
+				}catch(Exception e){
+					return "got IOException  rmdir"+"\n Message:"+e.getMessage()+" \n course:"+e.getCause();
+				}
+				try{
+					sftpClient.mkdir(ConfigDialog.desc, 0755);
+				}catch(Exception e){
+					return "got IOException  mkdir"+"\n Message:"+e.getMessage()+" \n course:"+e.getCause();
+				}
+				copy(new File(ConfigDialog.source));
 			}
-			try{
-				sftpClient.mkdir(ConfigDialog.desc, 0755);
-			}catch(Exception e){
-//				e.printStackTrace();
-			}
-			copy(new File(ConfigDialog.source));
-//			client.put(ConfigDialog.source, ConfigDialog.desc); // ÕâÀïÊÇ½«±¾µØÎÄ¼şÉÏ´«µ½·şÎñÆ÷¶ËµÄÄ¿Â¼ÏÂ
-//			client.get("/home/liuwei/lwtest.txt", "/home/liuwei/shelltest/"); // ÕâÀïÊÇ½«·şÎñÆ÷¶ËµÄÎÄ¼şÏÂÔØµ½±¾µØµÄÄ¿Â¼ÏÂ
-//			conn.close();
+			
+			//tipDialog.close();
 		} catch (IOException ex) {
-			return "got IOException";
+			return "got IOException"+"\n Message:"+ex.getMessage()+" \n course:"+ex.getCause();
 		} catch(Exception ex){
-			return "got exception";
+			return "got exception"+"\n Message:"+ex.getMessage()+" \n course:"+ex.getCause();
 		}
 		return "success";
 	}
 	
 	public static void copy(File source){
-		if(source.isFile()){
-			put(source.getPath());
-		}else{
+		
+		if(source.isFile() ){		//æ–‡ä»¶
+			if(source.length() < 1024*1024){
+				put(source.getPath());
+			}
+		}else{						//æ–‡ä»¶å¤¹
 			try {
 				String remoteDir = ConfigDialog.desc + source.getPath().substring(ConfigDialog.source.length()).replace(File.separator, "/");
 				sftpClient.mkdir(remoteDir, 0755);
+				//sftpClient.
 			} catch (IOException e) {
 //				e.printStackTrace();
-			} //Ô¶³ÌĞÂ½¨Ä¿Â¼ ,µÚ¶ş¸ö²ÎÊıÊÇ´´½¨µÄÎÄ¼ş¼ĞµÄ¶ÁĞ´È¨ÏŞ
+			} 
 			File[] files = source.listFiles();
 			for(File file: files){
 				copy(file);
@@ -76,21 +97,136 @@ public class SshCopyUtil {
 				try {
 					String remoteDir = ConfigDialog.desc + sourceFile.substring(ConfigDialog.source.length()).replace(File.separator, "/");
 					sftpClient.mkdir(remoteDir, 0755);
+					copy(new File(sourceFile));
 				} catch (IOException e) {
 //					e.printStackTrace();
-				} //Ô¶³ÌĞÂ½¨Ä¿Â¼ ,µÚ¶ş¸ö²ÎÊıÊÇ´´½¨µÄÎÄ¼ş¼ĞµÄ¶ÁĞ´È¨ÏŞ
-				copy(new File(sourceFile));
+				} 
 				return ;
 			}
-			String remoteFile = ConfigDialog.desc + sourceFile.substring(ConfigDialog.source.length()).replace(File.separator, "/");
+			String pathSym = sourceFile.substring(ConfigDialog.source.length()).replace(File.separator, "/");
+			String remoteFile = ConfigDialog.desc + pathSym;
 			if(remoteFile.length() == ConfigDialog.desc.length()){
-				client.put(sourceFile, remoteFile, ConfigDialog.filemode);
+				if(getFileMD5String(new File(sourceFile)) != getFileMD5String(new File(remoteFile)))
+					client.put(sourceFile, remoteFile, ConfigDialog.filemode);
 				return;
 			}
-			client.put(sourceFile, remoteFile.substring(0, remoteFile.lastIndexOf("/")), ConfigDialog.filemode);
+			
+			File lFile = new File(sourceFile);
+			SFTPv3FileAttributes attrs = null;
+			try {
+				attrs = sftpClient.stat(remoteFile);
+			} catch (Exception e) {
+			}
+			if(attrs == null || attrs.size!=lFile.length()){
+				try {
+					//tipDialog.setTipText(remoteFile);
+					client.put(sourceFile, remoteFile.substring(0, remoteFile.lastIndexOf("/")), ConfigDialog.filemode);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+				
 		} catch (IOException e) {
 //			e.printStackTrace();
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
+	private static void delRemote(String remotePath){
+		SFTPv3FileAttributes attrs = null;
+
+		try {
+			attrs = sftpClient.stat(remotePath);
+			
+		} catch (Exception e) {
+		}
+		if(!attrs.isDirectory()){
+			try {
+				sftpClient.rm(remotePath);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		else{
+			Vector<SFTPv3DirectoryEntry> files = new Vector<SFTPv3DirectoryEntry>();
+			try {
+				files = sftpClient.ls(remotePath);
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			for (SFTPv3DirectoryEntry sd : files) {
+				if(!sd.filename.replace(".", "").equals("")){
+					delRemote(remotePath+"/"+sd.filename);
+				}
+			}
+			try {
+				sftpClient.rmdir(remotePath);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	/**
+	* é»˜è®¤çš„å¯†ç å­—ç¬¦ä¸²ç»„åˆï¼Œapacheæ ¡éªŒä¸‹è½½çš„æ–‡ä»¶çš„æ­£ç¡®æ€§ç”¨çš„å°±æ˜¯é»˜è®¤çš„è¿™ä¸ªç»„åˆ
+	*/
+	protected static char hexDigits[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9','a', 'b', 'c', 'd', 'e', 'f' };
+	protected static MessageDigest messagedigest = null;
+	static{
+	   try{
+	    messagedigest = MessageDigest.getInstance("MD5");
+	   }catch(NoSuchAlgorithmException nsaex){
+	    System.err.println("md5 initial fail");
+	    nsaex.printStackTrace();
+	   }
+	}
+
+	/**
+	* é€‚ç”¨äºä¸ŠGå¤§çš„æ–‡ä»¶
+	* @param file
+	* @return
+	* @throws IOException
+	*/
+	public static String getFileMD5String(File file) throws IOException {
+	   FileInputStream in = new FileInputStream(file);
+	   FileChannel ch = in.getChannel();
+	   MappedByteBuffer byteBuffer = ch.map(FileChannel.MapMode.READ_ONLY, 0, file.length());
+	   messagedigest.update(byteBuffer);
+	   return bufferToHex(messagedigest.digest());
+	}
+
+	public static String getMD5String(String s) {
+	   return getMD5String(s.getBytes());
+	}
+
+	public static String getMD5String(byte[] bytes) {
+	   messagedigest.update(bytes);
+	   return bufferToHex(messagedigest.digest());
+	}
+
+	private static String bufferToHex(byte bytes[]) {
+	   return bufferToHex(bytes, 0, bytes.length);
+	}
+
+	private static String bufferToHex(byte bytes[], int m, int n) {
+	   StringBuffer stringbuffer = new StringBuffer(2 * n);
+	   int k = m + n;
+	   for (int l = m; l < k; l++) {
+	    appendHexPair(bytes[l], stringbuffer);
+	   }
+	   return stringbuffer.toString();
+	}
+
+
+	private static void appendHexPair(byte bt, StringBuffer stringbuffer) {
+	   char c0 = hexDigits[(bt & 0xf0) >> 4];
+	   char c1 = hexDigits[bt & 0xf];
+	   stringbuffer.append(c0);
+	   stringbuffer.append(c1);
+	}
+
+	public static boolean checkPassword(String password, String md5PwdStr) {
+	   String s = getMD5String(password);
+	   return s.equals(md5PwdStr);
+	}
 }

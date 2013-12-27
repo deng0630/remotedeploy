@@ -4,6 +4,7 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
@@ -19,6 +20,7 @@ public class ConfigDialog extends Dialog {
 	public static String desc = "";
 	public static String source = "";
 	public static String filemode="0644";
+	public static String initWithCopy="0";
 
 //	public static String host = "10.20.146.95";
 //	public static String port = "22";
@@ -36,6 +38,7 @@ public class ConfigDialog extends Dialog {
 	private Text textSource;
 	private Text textDesc;
 	private Text textMode;
+	private Button withCopy;
 
 	public ConfigDialog(Shell parentShell) {
 		super(parentShell);
@@ -43,10 +46,10 @@ public class ConfigDialog extends Dialog {
 	}
 
 	/**
-	 * ÔÚÕâ¸ö·½·¨Àï¹¹½¨DialogÖÐµÄ½çÃæÄÚÈÝ
+	 * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¹¹ï¿½ï¿½Dialogï¿½ÐµÄ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	 */
 	public Control createDialogArea(Composite parent) {
-		getShell().setText("Ô¶³Ì²¿ÊðÐÅÏ¢ÅäÖÃ"); // ÉèÖÃDialogµÄ±êÍ·
+		getShell().setText("Ô¶ï¿½Ì²ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½"); // ï¿½ï¿½ï¿½ï¿½Dialogï¿½Ä±ï¿½Í·
 
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
@@ -55,56 +58,59 @@ public class ConfigDialog extends Dialog {
 		parent.setLayout(layout);
 
 		Label labelHost = new Label(parent, SWT.NORMAL);
-		labelHost.setText("Ö÷»úÃû");
-		textHost = new Text(parent, SWT.BORDER); // ÉèÖÃÒ»¸öText¿Ø¼þ
-		textHost.setText(host); // ÉèÖÃtextÖÐµÄÄÚÈÝ
+		labelHost.setText("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+		textHost = new Text(parent, SWT.BORDER); // ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Textï¿½Ø¼ï¿½
+		textHost.setText(host); // ï¿½ï¿½ï¿½ï¿½textï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½
 		// textHost.setSize(100, 20);
 
 		Label labelPort = new Label(parent, SWT.NORMAL);
-		labelPort.setText("¶Ë¿Ú");
+		labelPort.setText("ï¿½Ë¿ï¿½");
 		// labelPort.setSize(20, 20);
-		textPort = new Text(parent, SWT.BORDER); // ÉèÖÃÒ»¸öText¿Ø¼þ
-		textPort.setText(port); // ÉèÖÃtextÖÐµÄÄÚÈÝ
+		textPort = new Text(parent, SWT.BORDER); // ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Textï¿½Ø¼ï¿½
+		textPort.setText(port); // ï¿½ï¿½ï¿½ï¿½textï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½
 		// textPort.setSize(50, 20);
 
 		Label labelUser = new Label(parent, SWT.NORMAL);
-		labelUser.setText("ÓÃ»§Ãû");
+		labelUser.setText("ï¿½Ã»ï¿½ï¿½ï¿½");
 		// labelUser.setSize(20, 20);
-		textUser = new Text(parent, SWT.BORDER); // ÉèÖÃÒ»¸öText¿Ø¼þ
-		textUser.setText(user); // ÉèÖÃtextÖÐµÄÄÚÈÝ
+		textUser = new Text(parent, SWT.BORDER); // ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Textï¿½Ø¼ï¿½
+		textUser.setText(user); // ï¿½ï¿½ï¿½ï¿½textï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½
 
 		Label labelPasswd = new Label(parent, SWT.NORMAL);
-		labelPasswd.setText("ÃÜÂë");
+		labelPasswd.setText("ï¿½ï¿½ï¿½ï¿½");
 		// labelPasswd.setSize(20, 20);
-		textPasswd = new Text(parent, SWT.BORDER); // ÉèÖÃÒ»¸öText¿Ø¼þ
-		textPasswd.setText(passwd); // ÉèÖÃtextÖÐµÄÄÚÈÝ
+		textPasswd = new Text(parent, SWT.BORDER); // ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Textï¿½Ø¼ï¿½
+		textPasswd.setText(passwd); // ï¿½ï¿½ï¿½ï¿½textï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½
 
 		Label labelSource = new Label(parent, SWT.NORMAL);
 		labelSource.setText("Ô´Ä¿Â¼");
 		// labelSource.setSize(20, 20);
-		textSource = new Text(parent, SWT.BORDER); // ÉèÖÃÒ»¸öText¿Ø¼þ
-		textSource.setText(SelectFileUtil.getSelectFile().getPath()); // ÉèÖÃtextÖÐµÄÄÚÈÝ
+		textSource = new Text(parent, SWT.BORDER); // ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Textï¿½Ø¼ï¿½
+		textSource.setText(SelectFileUtil.getSelectFile().getPath()); // ï¿½ï¿½ï¿½ï¿½textï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½
 
 		Label labelDest = new Label(parent, SWT.NORMAL);
-		labelDest.setText("Ä¿±êÄ¿Â¼");
+		labelDest.setText("Ä¿ï¿½ï¿½Ä¿Â¼");
 		// labelDest.setSize(20, 20);
-		textDesc = new Text(parent, SWT.BORDER); // ÉèÖÃÒ»¸öText¿Ø¼þ
-		textDesc.setText(desc); // ÉèÖÃtextÖÐµÄÄÚÈÝ
+		textDesc = new Text(parent, SWT.BORDER); // ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Textï¿½Ø¼ï¿½
+		textDesc.setText(desc); // ï¿½ï¿½ï¿½ï¿½textï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½
 		
 		Label labelMode = new Label(parent, SWT.NORMAL);
-		labelMode.setText("ÎÄ¼þÈ¨ÏÞ");
+		labelMode.setText("ï¿½Ä¼ï¿½È¨ï¿½ï¿½");
 		// labelDest.setSize(20, 20);
-		textMode = new Text(parent, SWT.BORDER); // ÉèÖÃÒ»¸öText¿Ø¼þ
-		textMode.setText(filemode); // ÉèÖÃtextÖÐµÄÄÚÈÝ
+		textMode = new Text(parent, SWT.BORDER); // ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Textï¿½Ø¼ï¿½
+		textMode.setText(filemode); // ï¿½ï¿½ï¿½ï¿½textï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½
 
+		withCopy = new Button(parent, SWT.CHECK);
+		withCopy.setText("initWithCopy?");
+		
 		return parent;
 	}
 
 	/**
-	 * Dialogµã»÷°´Å¥Ê±Ö´ÐÐµÄ·½·¨
+	 * Dialogï¿½ï¿½ï¿½ï¿½ï¿½Å¥Ê±Ö´ï¿½ÐµÄ·ï¿½ï¿½ï¿½
 	 */
 	protected void buttonPressed(int buttonId) {
-		// Èç¹ûÊÇµãÁËOK°´Å¥£¬Ôò½«ÖµÉèÖÃ»ØÀà±äÁ¿
+		// ï¿½ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½OKï¿½ï¿½Å¥ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		if (buttonId == IDialogConstants.OK_ID){
 			host = textHost.getText();
 			port = textPort.getText();
@@ -113,15 +119,17 @@ public class ConfigDialog extends Dialog {
 			source = textSource.getText();
 			desc = textDesc.getText();
 			filemode = textMode.getText();
+			initWithCopy = withCopy.getSelection()?"1":"0";
 			PropertiesUtil.save();
 			super.buttonPressed(buttonId);
 		}else if(buttonId == IDialogConstants.CANCEL_ID){
+			getShell().close();
 			super.buttonPressed(buttonId);
 		}
 	}
 
 	/**
-	 * ÖØÔØÕâ¸ö·½·¨¿ÉÒÔ¸Ä±ä´°¿ÚµÄÄ¬ÈÏÊ½Ñù SWT.RESIZE£º´°¿Ú¿ÉÒÔÍÏ¶¯±ß¿ò¸Ä±ä´óÐ¡ SWT.MAX£º¡¡´°¿Ú¿ÉÒÔ×î´ó»¯
+	 * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¸Ä±ä´°ï¿½Úµï¿½Ä¬ï¿½ï¿½Ê½ï¿½ï¿½ SWT.RESIZEï¿½ï¿½ï¿½ï¿½ï¿½Ú¿ï¿½ï¿½ï¿½ï¿½Ï¶ï¿½ï¿½ß¿ï¿½Ä±ï¿½ï¿½Ð¡ SWT.MAXï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	 */
 	public int getShellStyle() {
 		return super.getShellStyle() | SWT.RESIZE | SWT.MAX;

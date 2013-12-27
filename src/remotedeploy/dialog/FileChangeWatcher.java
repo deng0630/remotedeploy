@@ -26,7 +26,7 @@ public class FileChangeWatcher {
 
               List<WatchEvent<?>> events = watckKey.pollEvents();
               for (WatchEvent event : events) {
-            	  Path child = Paths.get(ConfigDialog.source).resolve(event.context().toString());//¾ø¶ÔÂ·¾¶  
+            	  Path child = Paths.get(ConfigDialog.source).resolve(event.context().toString());//ï¿½ï¿½ï¿½Â·ï¿½ï¿½  
                  if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
                     SshCopyUtil.put(child.toFile().getPath());
                  }
@@ -49,12 +49,12 @@ public class FileChangeWatcher {
     public static void main(String[] args) {
 
         //define a folder root
-        Path myDir = Paths.get("C:/Users/weijian.zhongwj/workspace1/WeiboMarket/res/aaa");       
+        Path myDir = Paths.get(ConfigDialog.source);       
 
         try {
            WatchService watcher = myDir.getFileSystem().newWatchService();
-           myDir.register(watcher, StandardWatchEventKinds.ENTRY_CREATE, 
-           StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
+           myDir.register(watcher, StandardWatchEventKinds.ENTRY_CREATE,
+        		   StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
 
            for(;;) {
               WatchKey watckKey = watcher.take();

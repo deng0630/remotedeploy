@@ -3,16 +3,24 @@ package remotedeploy.dialog;
 import org.eclipse.core.internal.resources.File;
 import org.eclipse.core.internal.resources.Folder;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.ui.ISelectionService;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 
 public class SelectFileUtil {
 
 	public static java.io.File getSelectFile() {
-		IStructuredSelection structured = (IStructuredSelection) PlatformUI
-				.getWorkbench().getActiveWorkbenchWindow()
-				.getSelectionService()
-				.getSelection("org.eclipse.jdt.ui.PackageExplorer");
+		IWorkbench wb = PlatformUI.getWorkbench();
+		IWorkbenchWindow  ww  = wb.getActiveWorkbenchWindow();
+		ISelectionService ss = ww.getSelectionService();
+		
+		IStructuredSelection structured = (IStructuredSelection)ss.getSelection("org.eclipse.jdt.ui.PackageExplorer");
 
+		if(structured == null){
+			return new java.io.File("");
+		}
+		
 		Object selected = structured.getFirstElement();
 
 		if (selected instanceof File) {
