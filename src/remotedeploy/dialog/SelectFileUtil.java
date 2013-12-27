@@ -18,7 +18,10 @@ public class SelectFileUtil {
 		IStructuredSelection structured = (IStructuredSelection)ss.getSelection("org.eclipse.jdt.ui.PackageExplorer");
 
 		if(structured == null){
-			return new java.io.File("");
+			structured = (IStructuredSelection)ss.getSelection("org.eclipse.jdt.ui.ProjectExplorer");
+			if(structured == null){
+				return new java.io.File("");
+			}
 		}
 		
 		Object selected = structured.getFirstElement();
