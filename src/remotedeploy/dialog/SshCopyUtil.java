@@ -1,26 +1,37 @@
 package remotedeploy.dialog;
 
-import java.awt.Window;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Vector;
 
-import org.eclipse.jface.dialogs.MessageDialog;
+import javax.management.RuntimeErrorException;
+
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.internal.core.PackageFragmentRoot;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.ISelectionService;
+import org.eclipse.ui.internal.Workbench;
 
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.SCPClient;
 import ch.ethz.ssh2.SFTPv3Client;
 import ch.ethz.ssh2.SFTPv3DirectoryEntry;
 import ch.ethz.ssh2.SFTPv3FileAttributes;
-import ch.ethz.ssh2.SFTPv3FileHandle;
+import ch.ethz.ssh2.Session;
+import ch.ethz.ssh2.StreamGobbler;
 
 public class SshCopyUtil {
 	
@@ -32,42 +43,55 @@ public class SshCopyUtil {
 	public static String executeCommand(Shell shell) {
 		if (ConfigDialog.host == null || ConfigDialog.user == null || ConfigDialog.passwd == null
 				|| ConfigDialog.source == null || ConfigDialog.desc == null) {
-			System.err.println("Can't execute SCP command. Please check \"hostname\" \"username\" and \"password\"");
+			ConsoleFactory.printToConsole("Can't execute SCP command. Please check \"hostname\" \"username\" and \"password\"");
 			return "check your config properties,every field must not be null";
 		}
 		try {
-			Connection conn = new Connection(ConfigDialog.host);
+			final Connection conn = new Connection(ConfigDialog.host);
 			conn.connect();
 			boolean isAuthenticated = conn.authenticateWithPassword(ConfigDialog.user, ConfigDialog.passwd);
 			if (isAuthenticated == false) {
-				System.err.println("Authenticated false!!!");
+				ConsoleFactory.printToConsole("Authenticated false!!!");
 				return "Authenticated false,check your config is right or not";
 			}
 			client = new SCPClient(conn);
 			sftpClient = new SFTPv3Client(conn);  
-			//tipDialog.open();
+			
 			if(ConfigDialog.initWithCopy.equals("1")){
+				ConsoleFactory.printToConsole("##############initialing......####################");
+				
 				try{
-					//sftpClient.rmdir(ConfigDialog.desc);
-					delRemote(ConfigDialog.desc);
+					delRemote(ConfigDialog.desc,conn);
 				}catch(Exception e){
 					return "got IOException  rmdir"+"\n Message:"+e.getMessage()+" \n course:"+e.getCause();
 				}
+				
 				try{
 					sftpClient.mkdir(ConfigDialog.desc, 0755);
 				}catch(Exception e){
 					return "got IOException  mkdir"+"\n Message:"+e.getMessage()+" \n course:"+e.getCause();
 				}
+				
 				copy(new File(ConfigDialog.source));
 			}
+			if(ConfigDialog.runAfterWatch.equals("1")){
+				new Thread(new runTheProject(conn)).start();
+			}
+				
 			
-			//tipDialog.close();
+			
 		} catch (IOException ex) {
 			return "got IOException"+"\n Message:"+ex.getMessage()+" \n course:"+ex.getCause();
 		} catch(Exception ex){
 			return "got exception"+"\n Message:"+ex.getMessage()+" \n course:"+ex.getCause();
 		}
+		ConsoleFactory.clean();
+		ConsoleFactory.printToConsole("##############started new remote watcher####################3");
 		return "success";
+	}
+	
+	public static void runTheProject(Connection conn){
+		
 	}
 	
 	public static void copy(File source){
@@ -80,13 +104,13 @@ public class SshCopyUtil {
 			try {
 				String remoteDir = ConfigDialog.desc + source.getPath().substring(ConfigDialog.source.length()).replace(File.separator, "/");
 				sftpClient.mkdir(remoteDir, 0755);
-				//sftpClient.
 			} catch (IOException e) {
-//				e.printStackTrace();
 			} 
 			File[] files = source.listFiles();
-			for(File file: files){
-				copy(file);
+			if(files != null && files.length > 0){
+				for(File file: files){
+					copy(file);
+				}
 			}
 		}
 	}
@@ -118,11 +142,8 @@ public class SshCopyUtil {
 			} catch (Exception e) {
 			}
 			if(attrs == null || attrs.size!=lFile.length()){
-				try {
-					//tipDialog.setTipText(remoteFile);
+				if(lFile.exists()){
 					client.put(sourceFile, remoteFile.substring(0, remoteFile.lastIndexOf("/")), ConfigDialog.filemode);
-				} catch (Exception e) {
-					e.printStackTrace();
 				}
 			}
 				
@@ -132,41 +153,79 @@ public class SshCopyUtil {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private static void delRemote(String remotePath){
-		SFTPv3FileAttributes attrs = null;
-
+	private static void delRemote(String remotePath,Connection conn){
 		try {
-			attrs = sftpClient.stat(remotePath);
+			Session session = conn.openSession();
 			
-		} catch (Exception e) {
-		}
-		if(!attrs.isDirectory()){
-			try {
-				sftpClient.rm(remotePath);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		else{
-			Vector<SFTPv3DirectoryEntry> files = new Vector<SFTPv3DirectoryEntry>();
-			try {
-				files = sftpClient.ls(remotePath);
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
-			for (SFTPv3DirectoryEntry sd : files) {
-				if(!sd.filename.replace(".", "").equals("")){
-					delRemote(remotePath+"/"+sd.filename);
+			session.execCommand("rm -rf ".concat(remotePath));
+			
+			//显示执行命令后的信息
+			InputStream stdout = new StreamGobbler(session.getStdout());
+			BufferedReader br = new BufferedReader(new InputStreamReader(stdout));
+
+			while (true) {
+				String line = br.readLine();
+				if (line == null) {
+					break;
 				}
+				ConsoleFactory.printToConsole("远程服务器返回信息:" + line);
 			}
+			
+			//获得退出状态
+			ConsoleFactory.printToConsole("ExitCode: " + session.getExitStatus());
+			session.close();
+		} catch (IOException e) {
+			
+			//如果删除失败则进行递归删除
 			try {
-				sftpClient.rmdir(remotePath);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+				SFTPv3FileAttributes attrs = null;
+				attrs = sftpClient.stat(remotePath);
+				if(!attrs.isDirectory()){
+					sftpClient.rm(remotePath);
+				}
+				else{
+					Vector<SFTPv3DirectoryEntry> files = new Vector<SFTPv3DirectoryEntry>();
+						files = sftpClient.ls(remotePath);
+					for (SFTPv3DirectoryEntry sd : files) {
+						if(!sd.filename.replace(".", "").equals("")){
+							delRemote(remotePath+"/"+sd.filename,conn);
+						}
+					}
+						sftpClient.rmdir(remotePath);
+				}
+			} catch (IOException e1) { }
 		}
+		
+		
+		
 	}
 
+	public static boolean createRemoteDirIfNotExist(String remoteDir) throws IOException{
+		try {
+			SFTPv3FileAttributes attrP = null;
+			
+			try {
+				attrP = sftpClient.stat(remoteDir);
+			} catch (Exception e) {
+				// TODO: handle exception
+			}
+			
+			if (attrP == null) {
+				try {
+					String parentDir = remoteDir.substring(0,remoteDir.lastIndexOf("/"));
+					createRemoteDirIfNotExist(parentDir);
+					sftpClient.mkdir(remoteDir, 074);
+					return true;
+				} catch (Exception e) {
+					System.out.println("create remote dir faild");
+					return false;
+				}
+			}
+		} catch (Exception e) {
+		}
+		return true;
+	}
+	
 	/**
 	* 默认的密码字符串组合，apache校验下载的文件的正确性用的就是默认的这个组合
 	*/
@@ -176,7 +235,7 @@ public class SshCopyUtil {
 	   try{
 	    messagedigest = MessageDigest.getInstance("MD5");
 	   }catch(NoSuchAlgorithmException nsaex){
-	    System.err.println("md5 initial fail");
+	    ConsoleFactory.printToConsole("md5 initial fail");
 	    nsaex.printStackTrace();
 	   }
 	}

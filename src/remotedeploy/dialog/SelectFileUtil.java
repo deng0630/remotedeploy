@@ -15,10 +15,10 @@ public class SelectFileUtil {
 		IWorkbenchWindow  ww  = wb.getActiveWorkbenchWindow();
 		ISelectionService ss = ww.getSelectionService();
 		
-		IStructuredSelection structured = (IStructuredSelection)ss.getSelection("org.eclipse.jdt.ui.PackageExplorer");
+		IStructuredSelection structured = (IStructuredSelection)ss.getSelection("org.eclipse.jdt.ui.ProjectExplorer");
 
 		if(structured == null){
-			structured = (IStructuredSelection)ss.getSelection("org.eclipse.jdt.ui.ProjectExplorer");
+			structured = (IStructuredSelection)ss.getSelection("org.eclipse.jdt.ui.PackageExplorer");
 			if(structured == null){
 				return new java.io.File("");
 			}

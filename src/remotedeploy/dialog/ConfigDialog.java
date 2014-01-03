@@ -21,6 +21,7 @@ public class ConfigDialog extends Dialog {
 	public static String source = "";
 	public static String filemode="0644";
 	public static String initWithCopy="0";
+	public static String runAfterWatch="1";
 
 //	public static String host = "10.20.146.95";
 //	public static String port = "22";
@@ -39,6 +40,7 @@ public class ConfigDialog extends Dialog {
 	private Text textDesc;
 	private Text textMode;
 	private Button withCopy;
+	private Button runProject;
 
 	public ConfigDialog(Shell parentShell) {
 		super(parentShell);
@@ -46,71 +48,75 @@ public class ConfigDialog extends Dialog {
 	}
 
 	/**
-	 * ����������ﹹ��Dialog�еĽ�������
-	 */
+     * 在这个方法里构建Dialog中的界面内容
+     */
 	public Control createDialogArea(Composite parent) {
-		getShell().setText("Զ�̲�����Ϣ����"); // ����Dialog�ı�ͷ
+		getShell().setText("remote config"); // 设置Dialog的标头
 
-		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
-		layout.makeColumnsEqualWidth = false;
-		layout.marginLeft = 10;
-		parent.setLayout(layout);
+        GridLayout layout = new GridLayout();
+        layout.numColumns = 2;
+        layout.makeColumnsEqualWidth = false;
+        layout.marginLeft = 10;
+        parent.setLayout(layout);
 
-		Label labelHost = new Label(parent, SWT.NORMAL);
-		labelHost.setText("������");
-		textHost = new Text(parent, SWT.BORDER); // ����һ��Text�ؼ�
-		textHost.setText(host); // ����text�е�����
-		// textHost.setSize(100, 20);
+        Label labelHost = new Label(parent, SWT.NORMAL);
+        labelHost.setText("host");
+        textHost = new Text(parent, SWT.BORDER); // 设置一个Text控件
+        textHost.setText(host); // 设置text中的内容
+        // textHost.setSize(100, 20);
 
-		Label labelPort = new Label(parent, SWT.NORMAL);
-		labelPort.setText("�˿�");
-		// labelPort.setSize(20, 20);
-		textPort = new Text(parent, SWT.BORDER); // ����һ��Text�ؼ�
-		textPort.setText(port); // ����text�е�����
-		// textPort.setSize(50, 20);
+        Label labelPort = new Label(parent, SWT.NORMAL);
+        labelPort.setText("port");
+        // labelPort.setSize(20, 20);
+        textPort = new Text(parent, SWT.BORDER); // 设置一个Text控件
+        textPort.setText(port); // 设置text中的内容
+        // textPort.setSize(50, 20);
 
-		Label labelUser = new Label(parent, SWT.NORMAL);
-		labelUser.setText("�û���");
-		// labelUser.setSize(20, 20);
-		textUser = new Text(parent, SWT.BORDER); // ����һ��Text�ؼ�
-		textUser.setText(user); // ����text�е�����
+        Label labelUser = new Label(parent, SWT.NORMAL);
+        labelUser.setText("username");
+        // labelUser.setSize(20, 20);
+        textUser = new Text(parent, SWT.BORDER); // 设置一个Text控件
+        textUser.setText(user); // 设置text中的内容
 
-		Label labelPasswd = new Label(parent, SWT.NORMAL);
-		labelPasswd.setText("����");
-		// labelPasswd.setSize(20, 20);
-		textPasswd = new Text(parent, SWT.BORDER); // ����һ��Text�ؼ�
-		textPasswd.setText(passwd); // ����text�е�����
+        Label labelPasswd = new Label(parent, SWT.NORMAL);
+        labelPasswd.setText("password");
+        // labelPasswd.setSize(20, 20);
+        textPasswd = new Text(parent, SWT.BORDER); // 设置一个Text控件
+        textPasswd.setText(passwd); // 设置text中的内容
 
-		Label labelSource = new Label(parent, SWT.NORMAL);
-		labelSource.setText("ԴĿ¼");
-		// labelSource.setSize(20, 20);
-		textSource = new Text(parent, SWT.BORDER); // ����һ��Text�ؼ�
-		textSource.setText(SelectFileUtil.getSelectFile().getPath()); // ����text�е�����
+        Label labelSource = new Label(parent, SWT.NORMAL);
+        labelSource.setText("source folder");
+        // labelSource.setSize(20, 20);
+        textSource = new Text(parent, SWT.BORDER); // 设置一个Text控件
+        textSource.setText(SelectFileUtil.getSelectFile().getPath()); // 设置text中的内容
 
-		Label labelDest = new Label(parent, SWT.NORMAL);
-		labelDest.setText("Ŀ��Ŀ¼");
-		// labelDest.setSize(20, 20);
-		textDesc = new Text(parent, SWT.BORDER); // ����һ��Text�ؼ�
-		textDesc.setText(desc); // ����text�е�����
-		
-		Label labelMode = new Label(parent, SWT.NORMAL);
-		labelMode.setText("�ļ�Ȩ��");
-		// labelDest.setSize(20, 20);
-		textMode = new Text(parent, SWT.BORDER); // ����һ��Text�ؼ�
-		textMode.setText(filemode); // ����text�е�����
+        Label labelDest = new Label(parent, SWT.NORMAL);
+        labelDest.setText("destination folder");
+        // labelDest.setSize(20, 20);
+        textDesc = new Text(parent, SWT.BORDER); // 设置一个Text控件
+        textDesc.setText(desc); // 设置text中的内容
+        
+        Label labelMode = new Label(parent, SWT.NORMAL);
+        labelMode.setText("file permissions");
+        // labelDest.setSize(20, 20);
+        textMode = new Text(parent, SWT.BORDER); // 设置一个Text控件
+        textMode.setText(filemode); // 设置text中的内容
 
 		withCopy = new Button(parent, SWT.CHECK);
-		withCopy.setText("initWithCopy?");
+		withCopy.setText("initial with copy operation?");
+		
+		runProject = new Button(parent, SWT.CHECK);
+		runProject.setText("run the project after watched remote?");
+		runProject.setSelection(true);
 		
 		return parent;
 	}
 
 	/**
-	 * Dialog�����ťʱִ�еķ���
-	 */
+     * Dialog点击按钮时执行的方法
+     */
 	protected void buttonPressed(int buttonId) {
-		// ����ǵ���OK��ť����ֵ���û������
+		// 如果是点了OK按钮，则将值设置回类变量
 		if (buttonId == IDialogConstants.OK_ID){
 			host = textHost.getText();
 			port = textPort.getText();
@@ -120,6 +126,8 @@ public class ConfigDialog extends Dialog {
 			desc = textDesc.getText();
 			filemode = textMode.getText();
 			initWithCopy = withCopy.getSelection()?"1":"0";
+			runAfterWatch= runProject.getSelection()?"1":"0";
+			
 			PropertiesUtil.save();
 			super.buttonPressed(buttonId);
 		}else if(buttonId == IDialogConstants.CANCEL_ID){
@@ -129,8 +137,8 @@ public class ConfigDialog extends Dialog {
 	}
 
 	/**
-	 * ��������������Ըı䴰�ڵ�Ĭ��ʽ�� SWT.RESIZE�����ڿ����϶��߿�ı��С SWT.MAX�������ڿ������
-	 */
+     * 重载这个方法可以改变窗口的默认式样 SWT.RESIZE：窗口可以拖动边框改变大小 SWT.MAX：　窗口可以最大化
+     */
 	public int getShellStyle() {
 		return super.getShellStyle() | SWT.RESIZE | SWT.MAX;
 	}

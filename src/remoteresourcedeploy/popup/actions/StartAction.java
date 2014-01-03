@@ -40,20 +40,15 @@ public class StartAction implements IObjectActionDelegate {
 //			shell,
 //			"Remotedeploy",
 //			"New Action was executed.");
-		ConfigDialog cd = new ConfigDialog(shell);;
-		try {
-			cd.open();
-
-			if(cd.getReturnCode() == IDialogConstants.OK_ID){
-				String retCode = SshCopyUtil.executeCommand(shell);
-				if(SelectFileUtil.getSelectFile().isDirectory()){
-					FileChangeWatcherThread.start(SelectFileUtil.getSelectFile().getPath());
-				}
-				MessageDialog.openInformation(shell,"Remotedeploy",retCode);
+		ConfigDialog cd = new ConfigDialog(shell);cd.open();
+		if(cd.getReturnCode() == IDialogConstants.OK_ID){
+			String retCode = SshCopyUtil.executeCommand(shell);
+			if(SelectFileUtil.getSelectFile().isDirectory()){
+				FileChangeWatcherThread.start(SelectFileUtil.getSelectFile().getPath());
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
+			//MessageDialog.openInformation(shell,"Remotedeploy",retCode);
 		}
+
 	}
 
 	/**

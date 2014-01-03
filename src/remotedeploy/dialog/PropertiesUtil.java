@@ -17,6 +17,7 @@ public class PropertiesUtil {
 	public static String source = "source";
 	public static String filemode="filemode";
 	public static String initWithCopy="initWithCopy";
+	public static String runAfterWatch="runAfterWatch";
 	
 	private static Properties pro = new Properties();
 	
@@ -44,6 +45,7 @@ public class PropertiesUtil {
 		ConfigDialog.source = get(source);
 		ConfigDialog.filemode = get(filemode);
 		ConfigDialog.initWithCopy = get(initWithCopy);
+		ConfigDialog.runAfterWatch = get(runAfterWatch);
 	}
 	
 	public static void save(){
@@ -55,6 +57,7 @@ public class PropertiesUtil {
 		pro.put(source, ConfigDialog.source);
 		pro.put(filemode, ConfigDialog.filemode);
 		pro.put(initWithCopy, ConfigDialog.initWithCopy);
+		pro.put(runAfterWatch, ConfigDialog.runAfterWatch);
 		try {
 			pro.store(new FileOutputStream(System.getProperty("java.io.tmpdir") + File.separator + "remotedeploy.properties"), "update");
 		} catch (FileNotFoundException e) {
